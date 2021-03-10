@@ -12,4 +12,5 @@ extern int cycle;
 int move(const json data){
   int index = cycle % 4;
   return index;
+  cout << "hello\n";
 }
