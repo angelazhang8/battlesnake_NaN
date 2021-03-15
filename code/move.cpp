@@ -12,11 +12,11 @@ using namespace std;
 using namespace nlohmann;
 
 extern std::string moves;
-extern int cycle;
 std::set<pair<int, int> > obstacles;
 
 void init_data(const json &data, Board &board, Game &game, Turn &turn,
                You &you) {
+  obstacles.clear();
   // init board
   for (int i = 0; i < data["board"]["food"].size(); i++) {
     board.food.push_back(make_pair(data["board"]["food"][i]["x"],
@@ -88,13 +88,18 @@ void init_data(const json &data, Board &board, Game &game, Turn &turn,
 }
 
 int move(Board &board, Game &game, Turn &turn, You &you) {
-  int index = cycle % 4;
-  int posx, posy;
-  vector<pair<int, int> > mvs;
+  cout << "snake id: " << you.snake.id << endl;
   vector<int> pot_moves;
+  // print obstacles
+  // cout << "obstacles: ";
+  // for (auto &e: obstacles){
+  //   cout << "(" << e.first << ", " << e.second << ") ";
+  // }
+  cout << endl;
   for (int i = -1; i <= 1; i++) {
     for (int j = -1; j <= 1; j++) {
       if ((i == 0 && j == 0) || abs(i) == abs(j)) continue;
+      cout << "i: " << i << ", j: " << j << endl;
       pair<int, int> p =
           std::make_pair(you.snake.head.first + i, you.snake.head.second + j);
         if (p.first < 0 || p.first >= board.width || p.second < 0 || p.second >= board.height) continue;
@@ -115,6 +120,19 @@ int move(Board &board, Game &game, Turn &turn, You &you) {
         cout << "not a valid move" << endl;
     }
   }
-  int r = rand() % pot_moves.size();
+  cout << "potential moves: ";
+  for (auto &e:pot_moves){
+    cout << e << " ";
+  }
+  cout << endl;
+  int t = pot_moves.size();
+  if (t<=0) {
+    cout << "move: down" << endl;
+    return 1;
+  }
+  int r = rand() % t;
+  for (auto &e:moves)cout<<e<<" ";
+  cout<<endl;
+  cout << "r: " << r << ", pot_moves[r]: " << pot_moves[r] << ", moves[pot_moves[r]]: " << moves[pot_moves[r]] << endl;
   return pot_moves[r];
 }
