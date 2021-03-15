@@ -91,7 +91,7 @@ int move(Board &board, Game &game, Turn &turn, You &you) {
   vector<int> pot_moves;
   for (int i = -1; i <= 1; i++) {
     for (int j = -1; j <= 1; j++) {
-      if (i == 0 && j == 0 || abs(i) == abs(j)) continue;
+      if ((i == 0 && j == 0) || abs(i) == abs(j)) continue;
       pair<int, int> p =
           std::make_pair(you.snake.head.first + i, you.snake.head.first + j);
 
