@@ -97,6 +97,7 @@ int move(Board &board, Game &game, Turn &turn, You &you) {
       if ((i == 0 && j == 0) || abs(i) == abs(j)) continue;
       pair<int, int> p =
           std::make_pair(you.snake.head.first + i, you.snake.head.second + j);
+        if (p.first < 0 || p.first >= board.width || p.second < 0 || p.second >= board.height) continue;
       std::set<pair<int, int> >::iterator it = obstacles.find(p);
       if (it!=obstacles.end()) continue;
       // {"up", "down", "left", "right"};
