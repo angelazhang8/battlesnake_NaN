@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include <iostream>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -12,7 +13,7 @@ using namespace nlohmann;
 
 extern std::string moves;
 extern int cycle;
-vector<pair<int, int> > obstacles;
+std::set<pair<int, int> > obstacles;
 
 void init_data(const json &data, Board &board, Game &game, Turn &turn,
                You &you) {
@@ -26,7 +27,7 @@ void init_data(const json &data, Board &board, Game &game, Turn &turn,
     pair<int, int> temp = make_pair(data["board"]["hazards"][i]["x"],
                                     data["board"]["hazards"][i]["y"]);
     board.hazards.push_back(temp);
-    obstacles.push_back(temp);
+    obstacles.insert(temp);
   }
 
   board.height = data["board"]["height"];
@@ -54,7 +55,7 @@ void init_data(const json &data, Board &board, Game &game, Turn &turn,
           make_pair(data["board"]["snakes"][i]["body"][j]["x"],
                     data["board"]["snakes"][i]["body"][j]["y"]);
       snake.body.push_back(temp);
-      obstacles.push_back(temp);
+      obstacles.insert(temp);
     }
     board.snakes.push_back(snake);
   }
@@ -81,7 +82,7 @@ void init_data(const json &data, Board &board, Game &game, Turn &turn,
     pair<int, int> temp =
         make_pair(data["you"]["body"][i]["x"], data["you"]["body"][i]["y"]);
     snake.body.push_back(temp);
-    obstacles.push_back(temp);
+    obstacles.insert(temp);
   }
   you.snake = snake;
 }
@@ -95,24 +96,22 @@ int move(Board &board, Game &game, Turn &turn, You &you) {
     for (int j = -1; j <= 1; j++) {
       if ((i == 0 && j == 0) || abs(i) == abs(j)) continue;
       pair<int, int> p =
-          std::make_pair(you.snake.head.first + i, you.snake.head.first + j);
-
-      for (auto &e : obstacles) {
-        if (e.first == p.first && e.second == p.second) {
-          continue;
-        } else {  // {"up", "down", "left", "right"};
-          if (i == -1 && j == 0)
-            pot_moves.push_back(2);  // left
-          else if (i == 0 && j == 1)
-            pot_moves.push_back(0);  // up
-          else if (i == 1 && j == 0)
-            pot_moves.push_back(3);  // right
-          else if (i == 0 && j == -1)
-            pot_moves.push_back(1);  // down
-          else
-            cout << "not a valid move" << endl;
-        }
-      }
+          std::make_pair(you.snake.head.first + i, you.snake.head.second + j);
+      std::set<pair<int, int> >::iterator it = obstacles.find(p);
+      if (it!=obstacles.end()) continue;
+      // {"up", "down", "left", "right"};
+      cout << "p.first: " << p.first << ", p.second: " << p.second
+           << ", i: " << i << ", j: " << j << endl;
+      if (i == -1 && j == 0)
+        pot_moves.push_back(2);  // left
+      else if (i == 0 && j == 1)
+        pot_moves.push_back(0);  // up
+      else if (i == 1 && j == 0)
+        pot_moves.push_back(3);  // right
+      else if (i == 0 && j == -1)
+        pot_moves.push_back(1);  // down
+      else
+        cout << "not a valid move" << endl;
     }
   }
   int r = rand() % pot_moves.size();
