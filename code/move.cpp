@@ -50,9 +50,11 @@ void init_data(const json &data, Board &board, Game &game, Turn &turn,
     snake.shout = data["board"]["snakes"][i]["shout"];
 
     for (int j = 0; j < data["board"]["snakes"][i]["body"].size(); j++) {
-      snake.body.push_back(
+      pair<int, int> temp =
           make_pair(data["board"]["snakes"][i]["body"][j]["x"],
-                    data["board"]["snakes"][i]["body"][j]["y"]));
+                    data["board"]["snakes"][i]["body"][j]["y"]);
+      snake.body.push_back(temp);
+      obstacles.push_back(temp);
     }
     board.snakes.push_back(snake);
   }
@@ -102,11 +104,11 @@ int move(Board &board, Game &game, Turn &turn, You &you) {
           if (i == -1 && j == 0)
             pot_moves.push_back(2);  // left
           else if (i == 0 && j == 1)
-            pot_moves.push_back(0);
+            pot_moves.push_back(0);  // up
           else if (i == 1 && j == 0)
-            pot_moves.push_back(3);
+            pot_moves.push_back(3);  // right
           else if (i == 0 && j == -1)
-            pot_moves.push_back(1);
+            pot_moves.push_back(1);  // down
           else
             cout << "not a valid move" << endl;
         }
