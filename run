@@ -1,0 +1,3 @@
+#!/bin/bash
+cd code
+clang++-7 -pthread -std=c++17 -o main main.cpp move.cpp; ./main
