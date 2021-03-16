@@ -17,6 +17,8 @@ bool DEBUG_PRINT = true;
 void init_data(const json &data, Board &board, Game &game, Turn &turn,
                You &you) {
   obstacles.clear();
+  board.height = data["board"]["height"];
+  board.width = data["board"]["width"];
   // init board
   for (int i = 0; i < data["board"]["food"].size(); i++) {
     board.food.push_back(make_pair(data["board"]["food"][i]["x"],
@@ -29,8 +31,6 @@ void init_data(const json &data, Board &board, Game &game, Turn &turn,
     board.hazards.push_back(temp);
     obstacles.insert(temp);
   }
-
-  board.height = data["board"]["height"];
   for (int i = 0; i < data["board"]["snakes"].size(); i++) {
     Snake snake;
     // head
@@ -60,7 +60,6 @@ void init_data(const json &data, Board &board, Game &game, Turn &turn,
     board.snakes.push_back(snake);
   }
 
-  board.width = data["board"]["width"];
   // init game
   game.id = data["game"]["id"];
   game.ruleset.name = data["game"]["ruleset"]["name"];
@@ -88,7 +87,7 @@ void init_data(const json &data, Board &board, Game &game, Turn &turn,
 }
 
 int move(Board &board, Game &game, Turn &turn, You &you) {
-  cout << "snake id: " << you.snake.id << endl;
+  cout << "snake id: " << you.snake.id << ", x: " << you.snake.head.first << ", y: " << you.snake.head.second << endl;
   vector<int> pot_moves;
   if (DEBUG_PRINT) {
     // print obstacles
@@ -107,6 +106,7 @@ int move(Board &board, Game &game, Turn &turn, You &you) {
       if (p.first < 0 || p.first >= board.width || p.second < 0 ||
           p.second >= board.height)
         continue;
+
       std::set<pair<int, int> >::iterator it = obstacles.find(p);
       if (it != obstacles.end()) continue;
       // {"up", "down", "left", "right"};
@@ -125,22 +125,24 @@ int move(Board &board, Game &game, Turn &turn, You &you) {
         cout << "ERROR not a valid move" << endl;
     }
   }
+  vector<std::string> moves{"up", "down", "left", "right"};
   if (DEBUG_PRINT) {
     cout << "potential moves: ";
     for (auto &e : pot_moves) {
-      cout << e << " ";
+      cout << moves[e] << " ";
     }
     cout << endl;
   }
   int t = pot_moves.size();
   if (t <= 0) {
-    if (DEBUG_PRINT) cout << "move: down" << endl;
-    return 1;
+    int k = rand() % 4;
+    if (DEBUG_PRINT) cout << "move: " << moves[k] << endl;
+    return k;
   }
-  vector<std::string> moves{"up", "down", "left", "right"};
   int r = rand() % t;
   if (DEBUG_PRINT) {
     cout << "move: " << moves[pot_moves[r]] << endl;
+    cout << endl;
   }
   return pot_moves[r];
 }
