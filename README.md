@@ -1,8 +1,8 @@
 # battlesnake_NaN
 
 ### Todo for the week of March 15:
-[] Refine the basic algorithm (going where there's no obstacles) in preparation for the mini tournament
-[] Brainstorm ideas for a more strategic algo
+* Refine the basic algorithm (going where there's no obstacles) in preparation for the mini tournament
+* Brainstorm ideas for a more strategic algo
 
 An example JSON data is:
 ```
@@ -10,7 +10,7 @@ An example JSON data is:
 ```
 
 ### Team todos for the week of March 1, 8:
-[x] Figure out how to avoid other snakes, walls, and ourself
-[x] How to get data from API call before each move 
-[x] Create a Replit account, so you can view our testsnake at [https://replit.com/@focusmuststudy/battlesnakeNaN#code/move.cpp](https://replit.com/@focusmuststudy/battlesnakeNaN#code/move.cpp)
-[x] Create a Battlesnake account and get added to the NaN team
+* Figure out how to avoid other snakes, walls, and ourself
+* How to get data from API call before each move 
+* Create a Replit account, so you can view our testsnake at [https://replit.com/@focusmuststudy/battlesnakeNaN#code/move.cpp](https://replit.com/@focusmuststudy/battlesnakeNaN#code/move.cpp)
+* Create a Battlesnake account and get added to the NaN team
