@@ -11,7 +11,6 @@
 using namespace std;
 using namespace nlohmann;
 
-extern std::string moves;
 std::set<pair<int, int> > obstacles;
 bool DEBUG_PRINT = true;
 
@@ -138,12 +137,10 @@ int move(Board &board, Game &game, Turn &turn, You &you) {
     if (DEBUG_PRINT) cout << "move: down" << endl;
     return 1;
   }
+  vector<std::string> moves{"up", "down", "left", "right"};
   int r = rand() % t;
   if (DEBUG_PRINT) {
-    cout << "moves: ";
-    for (int i = 0; i < moves.size(); i++) cout << moves[i] << " ";
-    cout << endl;
-    cout << "move: " << pot_moves[r] << endl;
+    cout << "move: " << moves[pot_moves[r]] << endl;
   }
   return pot_moves[r];
 }

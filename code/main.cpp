@@ -62,7 +62,6 @@ void run_program(void) {
     You you;
     init_data(data, board, game, turn, you);
     int index = move(board, game, turn, you);
-    cout << "move in main: " << moves[index] << endl;
     res.set_content("{\"move\": \"" + moves[index] + "\"}", "text/plain");
   });
   svr.listen("0.0.0.0", 8080);
@@ -70,7 +69,7 @@ void run_program(void) {
 }
 
 int main(void) {
-  test_main();
-  // run_program();
+  // test_main();
+  run_program();
   return 0;
 }
