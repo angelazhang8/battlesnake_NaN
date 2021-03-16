@@ -1,6 +1,7 @@
 # battlesnake_NaN
 
 ### Todo for the week of March 15:
+* Fix the segfault problem that sometimes pops up
 * Refine the basic algorithm (going where there's no obstacles) in preparation for the mini tournament
 * Brainstorm ideas for a more strategic algo
 
