@@ -53,8 +53,8 @@ void run_program(void) {
   });
   svr.Post("/move", [](auto &req, auto &res) {
     const json data = json::parse(req.body);
-    // cout << data;
-    // cout << "\n\n";
+    cout << data;
+    cout << "\n\n";
 
     Board board;
     Game game;
