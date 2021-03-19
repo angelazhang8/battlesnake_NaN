@@ -3,21 +3,22 @@
 #include <fstream>
 #include <iostream>
 #include <string>
-
+#include <set>
+#include <ctime>
+#include <chrono>
 #include "./http_stuff.h"
 #include "./json.hpp"
 #include "gameState.h"
+#include <pthread.h>
+#include <boost/date_time/posix_time/posix_time.hpp>
 using namespace std;
 using namespace nlohmann;
 
-int counter = 0;
 std::string moves[4] = {"up", "down", "left", "right"};
-extern int move(Board &board, Game &game, Turn &turn, You &you);
+extern int move(Board &board, Game &game, Turn &turn, You &you, std::set<pair<int, int> > &obstacles);
 extern void init_data(const json &data, Board &board, Game &game, Turn &turn,
-                      You &you);
-
-int init_data(const json data);
-int cycle = 0;
+                      You &you, std::set<pair<int, int> > &obstacles);
+pthread_mutex_t print_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void test_main(void) {
   /* For testing only */
@@ -29,8 +30,9 @@ void test_main(void) {
   Game game;
   Turn turn;
   You you;
-  init_data(data, board, game, turn, you);
-  int index = move(board, game, turn, you);
+  std::set<pair<int, int> > obstacles;
+  init_data(data, board, game, turn, you, obstacles);
+  int index = move(board, game, turn, you, obstacles);
 }
 
 void run_program(void) {
@@ -53,17 +55,32 @@ void run_program(void) {
   });
   svr.Post("/move", [](auto &req, auto &res) {
     const json data = json::parse(req.body);
+    const boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time();
+    const boost::posix_time::time_duration td = now.time_of_day();
+    const long hours        = td.hours();
+    const long minutes      = td.minutes();
+    const long seconds      = td.seconds();
+    const long milliseconds = td.total_milliseconds() -
+                              ((hours * 3600 + minutes * 60 + seconds) * 1000);
+
+    cout << "====== new snake state " << milliseconds << " ============" << endl;
+    pthread_mutex_lock(&print_mutex);
     cout << data;
     cout << "\n\n";
+    pthread_mutex_unlock(&print_mutex);
 
     Board board;
     Game game;
     Turn turn;
     You you;
-    init_data(data, board, game, turn, you);
-    int index = move(board, game, turn, you);
+
+    std::set<pair<int, int> > obstacles;
+
+    init_data(data, board, game, turn, you, obstacles);
+    int index = move(board, game, turn, you, obstacles);
     res.set_content("{\"move\": \"" + moves[index] + "\"}", "text/plain");
   });
+
   svr.listen("0.0.0.0", 8080);
   std::cout << "Server started";
 }
