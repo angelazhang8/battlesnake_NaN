@@ -11,8 +11,8 @@
 using namespace std;
 using namespace nlohmann;
 
-bool DEBUG_PRINT = true;
-bool SEG_PRINT = true;
+bool DEBUG_PRINT = false;
+bool SEG_PRINT = false;
 extern pthread_mutex_t print_mutex;
 
 void init_data(const json &data, Board &board, Game &game, Turn &turn,
@@ -192,10 +192,12 @@ void init_data(const json &data, Board &board, Game &game, Turn &turn,
 }
 
 int move(Board &board, Game &game, Turn &turn, You &you, std::set<pair<int, int> > &obstacles) {
-  pthread_mutex_lock(&print_mutex);
-  cout << "------ start move -------------------------" << endl;
-  cout << "snake id: " << you.snake.id << ", x: " << you.snake.head.first << ", y: " << you.snake.head.second << endl;
-  pthread_mutex_unlock(&print_mutex);
+  if (DEBUG_PRINT){
+    pthread_mutex_lock(&print_mutex);
+    cout << "------ start move -------------------------" << endl;
+    cout << "snake id: " << you.snake.id << ", x: " << you.snake.head.first << ", y: " << you.snake.head.second << endl;
+    pthread_mutex_unlock(&print_mutex);
+  }
   vector<int> pot_moves;
   if (DEBUG_PRINT) {
     // print obstacles

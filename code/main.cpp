@@ -19,6 +19,7 @@ extern int move(Board &board, Game &game, Turn &turn, You &you, std::set<pair<in
 extern void init_data(const json &data, Board &board, Game &game, Turn &turn,
                       You &you, std::set<pair<int, int> > &obstacles);
 pthread_mutex_t print_mutex = PTHREAD_MUTEX_INITIALIZER;
+extern int DEBUG_PRINT;
 
 void test_main(void) {
   /* For testing only */
@@ -63,11 +64,13 @@ void run_program(void) {
     const long milliseconds = td.total_milliseconds() -
                               ((hours * 3600 + minutes * 60 + seconds) * 1000);
 
-    cout << "====== new snake state " << milliseconds << " ============" << endl;
-    pthread_mutex_lock(&print_mutex);
-    cout << data;
-    cout << "\n\n";
-    pthread_mutex_unlock(&print_mutex);
+    if (DEBUG_PRINT) {
+      cout << "====== new snake state " << milliseconds << " ============" << endl;
+      pthread_mutex_lock(&print_mutex);
+      cout << data;
+      cout << "\n\n";
+      pthread_mutex_unlock(&print_mutex);
+    }
 
     Board board;
     Game game;
