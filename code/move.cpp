@@ -4,90 +4,198 @@
 #include <string>
 #include <utility>
 #include <vector>
-
+#include <pthread.h>
 #include "./http_stuff.h"
 #include "./json.hpp"
 #include "gameState.h"
 using namespace std;
 using namespace nlohmann;
 
-std::set<pair<int, int> > obstacles;
 bool DEBUG_PRINT = true;
+bool SEG_PRINT = true;
+extern pthread_mutex_t print_mutex;
 
 void init_data(const json &data, Board &board, Game &game, Turn &turn,
-               You &you) {
-  obstacles.clear();
-  board.height = data["board"]["height"];
-  board.width = data["board"]["width"];
+               You &you, std::set<pair<int, int> > &obstacles) {
+  
+  if (!data.contains("board")) { if (DEBUG_PRINT) cout << "error " << __LINE__ << endl; } 
+  if (!data["board"].contains("height") || !data["board"]["height"].is_number()) { if (DEBUG_PRINT) cout << "error " << __LINE__ << endl; } 
+  board.height = data["board"]["height"].get<int>();
+
+  if (SEG_PRINT) cout << "board.height: " << board.height << endl << std::flush;
+
+  if (!data["board"].contains("width") || !data["board"]["width"].is_number()) { if (DEBUG_PRINT) cout << "error " << __LINE__ << endl; } 
+  board.width = data["board"]["width"].get<int>();
+
+  if (SEG_PRINT) cout << "board.width: " << board.width << endl << std::flush;
+
   // init board
+  if (!data["board"].contains("food") || !data["board"]["food"].is_array()) { if (DEBUG_PRINT) cout << "error " << __LINE__ << endl; } 
   for (int i = 0; i < data["board"]["food"].size(); i++) {
-    board.food.push_back(make_pair(data["board"]["food"][i]["x"],
-                                   data["board"]["food"][i]["y"]));
+    board.food.push_back(make_pair(data["board"]["food"][i]["x"].get<int>(),
+                                   data["board"]["food"][i]["y"].get<int>()));
   }
-
-  for (int i = 0; i < data["board"]["hazards"].size(); i++) {
-    pair<int, int> temp = make_pair(data["board"]["hazards"][i]["x"],
-                                    data["board"]["hazards"][i]["y"]);
-    board.hazards.push_back(temp);
-    obstacles.insert(temp);
+  if (SEG_PRINT){
+    cout << "board.food: ";
+    for (auto &e : board.food){
+      cout << "(" << e.first << ", " << e.second << ") ";
+    }
+    cout << endl << std::flush;
   }
+  // for (int i = 0; i < data["board"]["hazards"].size(); i++) {
+  //   pair<int, int> temp = make_pair(data["board"]["hazards"][i]["x"],
+  //                                   data["board"]["hazards"][i]["y"]);
+  //   board.hazards.push_back(temp);
+  //   obstacles.insert(temp);
+  // }
+  // if (SEG_PRINT){
+  //   cout << "board.hazards: ";
+  //   for (auto &e : board.hazards){
+  //     cout << "(" << e.first << ", " << e.second << ") ";
+  //   }
+  //   cout << endl << std::flush;
+  // }
+  if (!data["board"].contains("snakes") || !data["board"]["snakes"].is_array()) { if (DEBUG_PRINT) cout << "error " << __LINE__ << endl; } 
   for (int i = 0; i < data["board"]["snakes"].size(); i++) {
-    Snake snake;
     // head
-    snake.head.first = data["board"]["snakes"][i]["head"]["x"];
-    snake.head.second = data["board"]["snakes"][i]["head"]["y"];
-    // health
-    snake.health = data["board"]["snakes"][i]["health"];
-    // id
-    snake.id = data["board"]["snakes"][i]["id"];
-    // latency
-    std::string temp = data["board"]["snakes"][i]["latency"];
-    snake.latency = std::stoi(temp);
-    // length
-    snake.length = data["board"]["snakes"][i]["length"];
-    // name
-    snake.name = data["board"]["snakes"][i]["name"];
-    // shout
-    snake.shout = data["board"]["snakes"][i]["shout"];
+    Snake snake;
+    auto &inp = data["board"]["snakes"][i];
 
-    for (int j = 0; j < data["board"]["snakes"][i]["body"].size(); j++) {
-      pair<int, int> temp =
-          make_pair(data["board"]["snakes"][i]["body"][j]["x"],
-                    data["board"]["snakes"][i]["body"][j]["y"]);
-      snake.body.push_back(temp);
-      obstacles.insert(temp);
+    if (!inp.contains("head") || !inp["head"].is_object()) { if (DEBUG_PRINT) cout << "error" << endl; } 
+    if (!inp["head"].contains("x") || !inp["head"]["x"].is_number()) { if (DEBUG_PRINT) cout << "error " << __LINE__ << endl; } 
+    if (!inp["head"].contains("y") || !inp["head"]["y"].is_number()) { if (DEBUG_PRINT) cout << "error " << __LINE__ << endl; } 
+    snake.head.first = inp["head"]["x"].get<int>();
+    snake.head.second = inp["head"]["y"].get<int>();
+
+    // health
+    if (!inp.contains("health") || !inp["health"].is_number()) { if (DEBUG_PRINT) cout << "error " << __LINE__ << endl; } 
+    snake.health = inp["health"].get<int>();
+
+    // id
+    if (!inp.contains("id") || !inp["id"].is_string()) { if (DEBUG_PRINT) cout << "error " << __LINE__ << endl; } 
+    snake.id = inp["id"].get<std::string>();
+
+    // latency
+    if (!inp.contains("latency") || !inp["latency"].is_string()) { if (DEBUG_PRINT) cout << "error " << __LINE__ << endl; } 
+    std::string temp = inp["latency"].get<std::string>();
+    snake.latency = std::stoi(temp);
+
+    // length
+    if (!inp.contains("length") || !inp["length"].is_number()) { if (DEBUG_PRINT) cout << "error " << __LINE__ << endl; } 
+    snake.length = inp["length"].get<int>();
+
+    // name
+    if (!inp.contains("name") || !inp["name"].is_string()) { if (DEBUG_PRINT) cout << "error " << __LINE__ << endl; } 
+    snake.name = inp["name"].get<std::string>();
+
+    // shout
+    if (!inp.contains("shout") || !inp["shout"].is_string()) { if (DEBUG_PRINT) cout << "error " << __LINE__ << endl; } 
+    snake.shout = inp["shout"].get<std::string>();
+
+    if (!inp.contains("body") || !inp["body"].is_array()) { if (DEBUG_PRINT) cout << "error " << __LINE__ << endl; } 
+    for (int j = 0; j < inp["body"].size(); j++) {
+      auto &bod =  inp["body"][j];
+      if (!bod.contains("x") || !bod["x"].is_number()) { if (DEBUG_PRINT) cout << "error " << __LINE__ << endl; } 
+      if (!bod.contains("y") || !bod["y"].is_number()) { if (DEBUG_PRINT) cout << "error " << __LINE__ << endl; } 
+
+      snake.body.push_back(make_pair(bod["x"].get<int>(), bod["y"].get<int>()));
+      obstacles.insert(make_pair(bod["x"].get<int>(), bod["y"].get<int>()));
     }
     board.snakes.push_back(snake);
   }
-
+  if (SEG_PRINT){
+    cout << "------ board.snakes --------------------- " << endl;
+    for (auto &snake : board.snakes){
+      cout << "snake.head: (" << snake.head.first << ", " << snake.head.second << "),\n" << std::flush;
+      cout << "snake.health: " << snake.health << endl << std::flush;
+      cout << "snake.id: " << snake.id << endl << std::flush;
+      cout << "snake.latency: " << snake.latency << endl << std::flush;
+      cout << "snake.length: " << snake.length << endl << std::flush;
+      cout << "snake.name: " << snake.name << endl << std::flush;
+      cout << "snake.shout: " << snake.shout << endl << std::flush;
+      cout << endl << "board.snakes.snake.body: ";
+      for (auto &e: snake.body){
+        cout << "(" << e.first << ", " << e.second << ") ";
+      }
+      cout << endl << std::flush;
+    }
+  }
   // init game
-  game.id = data["game"]["id"];
-  game.ruleset.name = data["game"]["ruleset"]["name"];
-  game.ruleset.version = data["game"]["ruleset"]["version"];
-  game.timeout = data["game"]["timeout"];
+  game.id = data["game"]["id"].get<std::string>();
+  if (SEG_PRINT) cout << "game.id: " << game.id << endl << std::flush;
+  game.ruleset.name = data["game"]["ruleset"]["name"].get<std::string>();
+  if (SEG_PRINT) cout << "game.ruleset.name: " << game.ruleset.name << endl << std::flush;
+  game.ruleset.version = data["game"]["ruleset"]["version"].get<std::string>();
+  if (SEG_PRINT) cout << "game.ruleset.version: " << game.ruleset.version << endl << std::flush;
+  game.timeout = data["game"]["timeout"].get<int>();
+  if (SEG_PRINT) cout << "game.timeout: " << game.timeout << endl << std::flush;
+
   // init Turn
-  turn.turn = data["turn"];
+  turn.turn = data["turn"].get<int>();
+  if (SEG_PRINT) cout << "turn.turn: " << turn.turn << endl << std::flush;
+
   // init you
-  Snake snake;
-  snake.head.first = data["you"]["head"]["x"];
-  snake.head.second = data["you"]["head"]["y"];
-  snake.health = data["you"]["health"];
-  snake.id = data["you"]["id"];
-  std::string temp = data["you"]["latency"];
+  if (!data.contains("you") || !data["you"].is_object()) { if (DEBUG_PRINT) cout << "error " << __LINE__ << endl; }
+  auto &inp = data["you"];
+  if (!inp.contains("head") || !inp["head"].is_object()) { if (DEBUG_PRINT) cout << "error" << endl; } 
+    if (!inp["head"].contains("x") || !inp["head"]["x"].is_number()) { if (DEBUG_PRINT) cout << "error " << __LINE__ << endl; } 
+    if (!inp["head"].contains("y") || !inp["head"]["y"].is_number()) { if (DEBUG_PRINT) cout << "error " << __LINE__ << endl; } 
+
+  Snake snake; 
+  snake.head.first = data["you"]["head"]["x"].get<int>();
+  snake.head.second = data["you"]["head"]["y"].get<int>();
+  if (SEG_PRINT) cout << "you.snake.head: (" << you.snake.head.first << ", " << you.snake.head.second << "),\n" << std::flush;
+
+  if (!inp.contains("health") || !inp["health"].is_number()) { if (DEBUG_PRINT) cout << "error " << __LINE__ << endl; } 
+  snake.health = data["you"]["health"].get<int>();
+  if (SEG_PRINT) cout << "you.snake.health: " << you.snake.health << "\n" << std::flush;
+
+  if (!inp.contains("id") || !inp["id"].is_string()) { if (DEBUG_PRINT) cout << "error " << __LINE__ << endl; } 
+  snake.id = data["you"]["id"].get<std::string>();
+  if (SEG_PRINT) cout << "you.snake.id: " << you.snake.id << "\n" << std::flush;
+  
+  if (!inp.contains("latency") || !inp["latency"].is_string()) { if (DEBUG_PRINT) cout << "error " << __LINE__ << endl; } 
+  std::string temp = data["you"]["latency"].get<std::string>();
   snake.latency = std::stoi(temp);
-  snake.name = data["you"]["name"];
-  snake.shout = data["you"]["shout"];
+  if (SEG_PRINT) cout << "you.snake.latency: " << you.snake.latency << "\n" << std::flush;
+  
+  if (!inp.contains("length") || !inp["length"].is_number()) { if (DEBUG_PRINT) cout << "error " << __LINE__ << endl; } 
+  snake.length = data["you"]["length"].get<int>();
+  if (SEG_PRINT) cout << "you.snake.length: " << you.snake.length << "\n" << std::flush;
+
+  if (!inp.contains("name") || !inp["name"].is_string()) { if (DEBUG_PRINT) cout << "error " << __LINE__ << endl; } 
+  snake.name = data["you"]["name"].get<std::string>();
+  if (SEG_PRINT) cout << "you.snake.name: " << you.snake.name << "\n" << std::flush;
+
+  if (!inp.contains("shout") || !inp["shout"].is_string()) { if (DEBUG_PRINT) cout << "error " << __LINE__ << endl; } 
+  snake.shout = data["you"]["shout"].get<std::string>();
+  if (SEG_PRINT) cout << "you.snake.shout: " << you.snake.shout << "\n" << std::flush;
+
+  if (!inp.contains("body") || !inp["body"].is_array()) { if (DEBUG_PRINT) cout << "error " << __LINE__ << endl; }
   for (int i = 0; i < data["you"]["body"].size(); i++) {
-    pair<int, int> temp =
-        make_pair(data["you"]["body"][i]["x"], data["you"]["body"][i]["y"]);
-    snake.body.push_back(temp);
-    obstacles.insert(temp);
+    auto &bod =  inp["body"][i];
+    if (!bod.contains("x") || !bod["x"].is_number()) { if (DEBUG_PRINT) cout << "error " << __LINE__ << endl; } 
+    if (!bod.contains("y") || !bod["y"].is_number()) { if (DEBUG_PRINT) cout << "error " << __LINE__ << endl; } 
+
+    snake.body.push_back(make_pair(data["you"]["body"][i]["x"], data["you"]["body"][i]["y"].get<int>()));
+    obstacles.insert(make_pair(data["you"]["body"][i]["x"], data["you"]["body"][i]["y"].get<int>()));
   }
   you.snake = snake;
+
+  if (SEG_PRINT){
+    cout << endl << "you.snake.body: ";
+    for (auto &e: you.snake.body){
+      cout << "(" << e.first << ", " << e.second << ") ";
+    }
+    cout << "\n\n" << std::flush;
+  }
 }
 
-int move(Board &board, Game &game, Turn &turn, You &you) {
+int move(Board &board, Game &game, Turn &turn, You &you, std::set<pair<int, int> > &obstacles) {
+  pthread_mutex_lock(&print_mutex);
+  cout << "------ start move -------------------------" << endl;
   cout << "snake id: " << you.snake.id << ", x: " << you.snake.head.first << ", y: " << you.snake.head.second << endl;
+  pthread_mutex_unlock(&print_mutex);
   vector<int> pot_moves;
   if (DEBUG_PRINT) {
     // print obstacles
@@ -95,7 +203,7 @@ int move(Board &board, Game &game, Turn &turn, You &you) {
     for (auto &e : obstacles) {
       cout << "(" << e.first << ", " << e.second << ") ";
     }
-    cout << endl;
+    cout << endl << std::flush;
   }
   for (int i = -1; i <= 1; i++) {
     for (int j = -1; j <= 1; j++) {
@@ -112,7 +220,7 @@ int move(Board &board, Game &game, Turn &turn, You &you) {
       // {"up", "down", "left", "right"};
       if (DEBUG_PRINT)
         cout << "p.first: " << p.first << ", p.second: " << p.second
-             << ", i: " << i << ", j: " << j << endl;
+             << ", i: " << i << ", j: " << j << endl << std::flush;
       if (i == -1 && j == 0)
         pot_moves.push_back(2);  // left
       else if (i == 0 && j == 1)
@@ -122,27 +230,31 @@ int move(Board &board, Game &game, Turn &turn, You &you) {
       else if (i == 0 && j == -1)
         pot_moves.push_back(1);  // down
       else
-        cout << "ERROR not a valid move" << endl;
+        cout << "ERROR not a valid move" << endl << std::flush;
     }
   }
   vector<std::string> moves{"up", "down", "left", "right"};
   if (DEBUG_PRINT) {
+    pthread_mutex_lock(&print_mutex);
     cout << "potential moves: ";
     for (auto &e : pot_moves) {
       cout << moves[e] << " ";
     }
-    cout << endl;
+    cout << endl << std::flush;
+    pthread_mutex_unlock(&print_mutex);
   }
   int t = pot_moves.size();
   if (t <= 0) {
     int k = rand() % 4;
-    if (DEBUG_PRINT) cout << "move: " << moves[k] << endl;
+    if (DEBUG_PRINT) cout << "move: " << moves[k] << endl << std::flush;
     return k;
   }
   int r = rand() % t;
   if (DEBUG_PRINT) {
+    pthread_mutex_lock(&print_mutex);
     cout << "move: " << moves[pot_moves[r]] << endl;
-    cout << endl;
+    cout << endl << std::flush;
+    pthread_mutex_unlock(&print_mutex);
   }
   return pot_moves[r];
 }
