@@ -191,6 +191,21 @@ void init_data(const json &data, Board &board, Game &game, Turn &turn,
   }
 }
 
+// returns true if there is threat of head to head collision 
+bool detectHeadCollision(Board board, int ourLength, pair<int, int> ourNextLocation) {
+  for (auto &snake: board.snakes) {
+    if (snake.head.second == ourNextLocation.second) {
+      if (snake.head.first + 1 == ourNextLocation.first || 
+      snake.head.first - 1 == ourNextLocation.first) return true;
+    } 
+    else if (snake.head.first == ourNextLocation.first){
+      if (snake.head.second + 1 == ourNextLocation.second ||
+      snake.head.second - 1 == ourNextLocation.second) return true;
+    }
+  }
+  return false;
+}
+
 int move(Board &board, Game &game, Turn &turn, You &you, std::set<pair<int, int> > &obstacles) {
   if (DEBUG_PRINT){
     pthread_mutex_lock(&print_mutex);
@@ -219,6 +234,11 @@ int move(Board &board, Game &game, Turn &turn, You &you, std::set<pair<int, int>
 
       std::set<pair<int, int> >::iterator it = obstacles.find(p);
       if (it != obstacles.end()) continue;
+
+      // head to head collisions
+      // check adjacent squares of our snake's head
+      if (detectHeadCollision(board, you.snake.length, p)) continue;
+
       // {"up", "down", "left", "right"};
       if (DEBUG_PRINT)
         cout << "p.first: " << p.first << ", p.second: " << p.second
@@ -258,5 +278,6 @@ int move(Board &board, Game &game, Turn &turn, You &you, std::set<pair<int, int>
     cout << endl << std::flush;
     pthread_mutex_unlock(&print_mutex);
   }
+
   return pot_moves[r];
 }
