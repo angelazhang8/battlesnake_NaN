@@ -194,6 +194,7 @@ void init_data(const json &data, Board &board, Game &game, Turn &turn,
 // returns true if there is threat of head to head collision 
 bool detectHeadCollision(Board board, int ourLength, pair<int, int> ourNextLocation) {
   for (auto &snake: board.snakes) {
+    if (ourLength > snake.length) continue;
     if (snake.head.second == ourNextLocation.second) {
       if (snake.head.first + 1 == ourNextLocation.first || 
       snake.head.first - 1 == ourNextLocation.first) return true;
