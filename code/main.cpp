@@ -33,7 +33,7 @@ void test_main(void) {
   You you;
   std::set<pair<int, int> > obstacles;
   init_data(data, board, game, turn, you, obstacles);
-  int index = move(board, game, turn, you, obstacles);
+  //int index = move(board, game, turn, you, obstacles);
 }
 
 void run_program(void) {
